@@ -1,5 +1,7 @@
 package com.fan.shiro.realm;
 
+import com.fan.dao.UserDao;
+import com.fan.vo.User;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -11,20 +13,23 @@ import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.util.ByteSource;
 
-import java.util.HashMap;
+import javax.annotation.Resource;
 import java.util.HashSet;
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
 
 /**
  * 自定义的realm
  */
 public class CustomerRealm extends AuthorizingRealm {
-    Map<String,String> userMap = new HashMap<>(16);
+//    Map<String,String> userMap = new HashMap<>(16);
+//
+//    {
+//        userMap.put("Mark","d40fdd323f5322ff34a41f026f35cf20");
+//    }
 
-    {
-        userMap.put("Mark","d40fdd323f5322ff34a41f026f35cf20");
-    }
+    @Resource
+    private UserDao userDao;
 
     //授权相关
     @Override
@@ -49,10 +54,13 @@ public class CustomerRealm extends AuthorizingRealm {
     }
 
     private Set<String> getRolesByUserName(String userName) {
-        Set<String> sets = new HashSet<>();
-        sets.add("admin");
-        sets.add("user");
-        return sets;
+//        Set<String> sets = new HashSet<>();
+//        sets.add("admin");
+//        sets.add("user");
+//        return sets;
+        List<String> list = userDao.getRolesByUserName(userName);
+        Set<String> sets = new HashSet<>(list);
+        return  sets;
     }
 
     //认证相关
@@ -68,7 +76,7 @@ public class CustomerRealm extends AuthorizingRealm {
         }
         SimpleAuthenticationInfo authenticationInfo = new SimpleAuthenticationInfo(userName,password,"realmCustom");
         //把盐加进去
-        authenticationInfo.setCredentialsSalt(ByteSource.Util.bytes("Mark"));
+        authenticationInfo.setCredentialsSalt(ByteSource.Util.bytes(userName));
         return authenticationInfo;
     }
 
@@ -78,7 +86,13 @@ public class CustomerRealm extends AuthorizingRealm {
      * @return
      */
     private String getPasswordByUserName(String userName) {
-        return userMap.get(userName);
+        //return urMap.get(userName);
+
+        User user = userDao.getUserByUserName(userName);
+        if(user != null) {
+            return user.getPassword();
+        }
+        return null;
     }
 
     public static void main(String[] args) {
